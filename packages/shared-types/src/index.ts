@@ -2,7 +2,7 @@
 
 export type AmbulanceStatus =
     | 'idle'
-    | 'on_route'
+    | 'en_route'
     | 'on_scene'
     | 'transporting'
     | 'returning'
