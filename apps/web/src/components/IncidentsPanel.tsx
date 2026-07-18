@@ -3,17 +3,13 @@ import { useSimStore } from '../store/simStore';
 import { formatSimTime } from '@sacs/core-logic';
 import type { Incident } from '@sacs/shared-types';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 const PRIORITY_COLORS: Record<Incident['priority'], string> = {
-    critical: '#ef4444',
-    urgent: '#f59e0b',
-    standard: '#38bdf8',
+    critical: 'var(--red)',
+    urgent:   'var(--amber)',
+    standard: 'var(--accent)',
 };
 
 const MAX_VISIBLE_INCIDENTS = 12;
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
 
 interface IncidentRowProps {
     incident: Incident;
@@ -24,31 +20,31 @@ function IncidentRow({ incident, assignedCallSign }: IncidentRowProps) {
     const { t } = useTranslation();
 
     return (
-        <div data-testid="incident-row">
+        <div className="incident-row" data-testid="incident-row">
       <span
-          style={{
-              display: 'inline-block',
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              background: PRIORITY_COLORS[incident.priority],
-              flexShrink: 0,
-          }}
+          className="incident-priority-dot"
+          style={{ background: PRIORITY_COLORS[incident.priority] }}
       />
-            <div>
-                <span>{incident.label}</span>
-                <div>
-          <span data-testid="incident-priority">
+            <div className="incident-info">
+                <span className="incident-label">{incident.label}</span>
+                <div className="incident-meta">
+          <span
+              className={`incident-badge incident-badge--${incident.priority}`}
+              data-testid="incident-priority"
+          >
             {t(`priority.${incident.priority}`)}
           </span>
-                    <span data-testid="incident-status">
+                    <span
+                        className={`incident-badge incident-badge--${incident.status}`}
+                        data-testid="incident-status"
+                    >
             {t(`incidents.${incident.status}`)}
           </span>
-                    <span>
-            {t('incidents.createdAt')} {formatSimTime(incident.createdAtMinute)}
+                    <span className="incident-time">
+            {formatSimTime(incident.createdAtMinute)}
           </span>
                     {assignedCallSign !== null && (
-                        <span data-testid="incident-assigned-to">
+                        <span className="incident-assigned" data-testid="incident-assigned-to">
               {assignedCallSign}
             </span>
                     )}
@@ -58,16 +54,13 @@ function IncidentRow({ incident, assignedCallSign }: IncidentRowProps) {
     );
 }
 
-// ─── IncidentsPanel ───────────────────────────────────────────────────────────
-
 export default function IncidentsPanel() {
     const { t } = useTranslation();
 
-    const incidents = useSimStore((s) => s.incidents);
+    const incidents  = useSimStore((s) => s.incidents);
     const ambulances = useSimStore((s) => s.ambulances);
     const addIncident = useSimStore((s) => s.addIncident);
 
-    // Sort by createdAtMinute descending — most recent first
     const sortedIncidents = [...incidents]
         .sort((a, b) => b.createdAtMinute - a.createdAtMinute)
         .slice(0, MAX_VISIBLE_INCIDENTS);
@@ -96,19 +89,22 @@ export default function IncidentsPanel() {
     }
 
     return (
-        <div data-testid="incidents-panel">
-            <h3>{t('incidents.title')}</h3>
-
-            <button onClick={handleGenerateIncident}>
-                {t('incidents.generate')}
-            </button>
+        <div className="panel" data-testid="incidents-panel">
+            <div className="incidents-header">
+                <h3 className="panel__title" style={{ marginBottom: 0 }}>
+                    {t('incidents.title')}
+                </h3>
+                <button className="btn btn--danger" onClick={handleGenerateIncident}>
+                    {t('incidents.generate')}
+                </button>
+            </div>
 
             {sortedIncidents.length === 0 ? (
-                <p data-testid="no-incidents-message">
+                <p className="incidents-empty" data-testid="no-incidents-message">
                     {t('incidents.noIncidents')}
                 </p>
             ) : (
-                <div>
+                <div className="incidents-list">
                     {sortedIncidents.map((incident) => (
                         <IncidentRow
                             key={incident.id}
