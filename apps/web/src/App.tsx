@@ -6,6 +6,7 @@ import FleetPanel from './components/FleetPanel';
 import BreaksPanel from './components/BreaksPanel';
 import CoveragePanel from './components/CoveragePanel';
 import IncidentsPanel from './components/IncidentsPanel';
+import MapView from './components/MapView';
 
 type Tab = 'fleet' | 'breaks' | 'coverage' | 'incidents';
 
@@ -24,6 +25,7 @@ const TABS: TabConfig[] = [
 export default function App() {
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<Tab>('fleet');
+    const [showTraffic, setShowTraffic] = useState(true);
 
     const running = useSimStore((s) => s.running);
     const speedMultiplier = useSimStore((s) => s.speedMultiplier);
@@ -57,10 +59,14 @@ export default function App() {
 
             <div className="main-grid">
                 <div className="map-container" data-testid="map-container">
-                    <div className="map-placeholder">
-                        <span className="map-placeholder__icon">🗺</span>
-                        <span>Google Maps — Phase 3</span>
-                    </div>
+                    <MapView showTraffic={showTraffic} />
+                    <button
+                        className="map-traffic-toggle"
+                        onClick={() => setShowTraffic((v) => !v)}
+                        title="Toggle traffic layer"
+                    >
+                        🚦 {showTraffic ? 'Traffic ON' : 'Traffic OFF'}
+                    </button>
                 </div>
 
                 <div className="side-panel" data-testid="side-panel">

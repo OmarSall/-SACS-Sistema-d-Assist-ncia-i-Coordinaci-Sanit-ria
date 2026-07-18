@@ -805,6 +805,27 @@ select, input {
     border-radius: 3px;
 }
 
+.map-traffic-toggle {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 5;
+    transition: border-color 0.1s;
+}
+
+.map-traffic-toggle:hover {
+    border-color: var(--accent);
+}
+
+
 /* ─── Responsive ─────────────────────────────────────────────────────────────── */
 
 @media (max-width: 1024px) {
