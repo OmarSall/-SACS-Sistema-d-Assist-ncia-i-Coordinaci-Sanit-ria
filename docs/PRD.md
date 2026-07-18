@@ -1,4 +1,4 @@
-# PRD — SACS: Sistema d'Assistència i Coordinació Sanitària
+# PRD - SACS: Sistema d'Assistència i Coordinació Sanitària
 ## Ambulance Dispatch Simulation & Operations Platform
 
 | |                                                            |
