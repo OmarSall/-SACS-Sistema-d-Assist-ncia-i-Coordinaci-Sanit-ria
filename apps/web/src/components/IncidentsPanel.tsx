@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useSimStore } from '../store/simStore';
 import { formatSimTime } from '@sacs/core-logic';
 import type { Incident } from '@sacs/shared-types';
+import { randomIncidentLocation } from '../data/locations';
 
 const PRIORITY_COLORS: Record<Incident['priority'], string> = {
     critical: 'var(--red)',
@@ -72,15 +73,12 @@ export default function IncidentsPanel() {
 
     function handleGenerateIncident() {
         const currentMinute = useSimStore.getState().currentMinute;
+        const priorities = ['critical', 'urgent', 'urgent', 'standard', 'standard'] as const;
+
         addIncident({
             id: `inc-${Date.now()}`,
-            position: {
-                lat: 41.25 + Math.random() * 0.33,
-                lng: 1.92 + Math.random() * 0.38,
-            },
-            priority: (['critical', 'urgent', 'urgent', 'standard', 'standard'] as const)[
-                Math.floor(Math.random() * 5)
-                ]!,
+            position: randomIncidentLocation(),
+            priority: priorities[Math.floor(Math.random() * priorities.length)]!,
             createdAtMinute: currentMinute,
             status: 'pending',
             assignedAmbulanceId: null,

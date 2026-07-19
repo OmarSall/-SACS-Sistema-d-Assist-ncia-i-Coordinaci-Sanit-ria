@@ -3,10 +3,10 @@
 
 | |                                                            |
 |---|------------------------------------------------------------|
-| **Status** | Draft v1.0                                                 |
+| **Status** | Document v2.0                                              |
 | **Owner** | Omar Salloum                                               |
 | **Stakeholder** | Private ambulance operator (Catalonia)                     |
-| **Last updated** | 2026-06-22                                                 |
+| **Last updated** | 2026-07-19                                                  |
 | **Audience** | Engineering team, future contributors, CEO/ops stakeholder |
 
 ---

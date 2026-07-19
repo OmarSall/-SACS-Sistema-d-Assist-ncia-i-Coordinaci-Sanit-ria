@@ -34,7 +34,7 @@ export default function App() {
     useEffect(() => {
         if (!running) return;
         const intervalId = setInterval(() => {
-            tick(speedMultiplier);
+            tick(speedMultiplier * 0.15);
         }, 1000);
         return () => clearInterval(intervalId);
     }, [running, speedMultiplier, tick]);

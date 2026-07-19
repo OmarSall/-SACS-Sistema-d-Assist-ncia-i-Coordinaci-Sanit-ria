@@ -17,6 +17,7 @@ import {
     buildInitialAmbulances,
     COVERAGE_ZONES,
 } from '../data/locations';
+import { findNearestHospital } from '../data/locations';
 
 // ─── State shape ─────────────────────────────────────────────────────────────
 
@@ -49,11 +50,32 @@ type SimStore = SimState & SimActions;
 
 // ─── Initial state factory ───────────────────────────────────────────────────
 
+function getBarcelonaMinuteFromMidnight(): number {
+    const now = new Date();
+    const barcelonaTime = new Intl.DateTimeFormat('es-ES', {
+        timeZone: 'Europe/Madrid',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false,
+    }).formatToParts(now);
+
+    const get = (type: string) =>
+        parseInt(barcelonaTime.find((p) => p.type === type)?.value ?? '0', 10);
+
+    const hours   = get('hour');
+    const minutes = get('minute');
+    const seconds = get('second');
+
+    // Minutes from midnight (with fractional seconds)
+    return hours * 60 + minutes + seconds / 60;
+}
+
 function buildInitialState(): SimState {
     return {
         running: false,
         speedMultiplier: 1,
-        currentMinute: 0,
+        currentMinute: getBarcelonaMinuteFromMidnight(), // ← zamiast 0
         trafficModel: 'best_guess',
         ambulances: buildInitialAmbulances(),
         incidents: [],
@@ -160,7 +182,7 @@ export const useSimStore = create<SimStore>((set, get) => ({
             COVERAGE_ZONES,
             (minute) => trafficFactorForTime(minute, trafficModel),
         );
-        set({ coverageWarnings: warnings, ambulances: updated });
+        set({ coverageWarnings: warnings, ambulances: [...updated] });
     },
 
     tick: (deltaMinutes?: number) => {
@@ -205,8 +227,9 @@ export const useSimStore = create<SimStore>((set, get) => ({
 
             // on_scene → transporting (immediate in simulation)
             if (updated.status === 'on_scene') {
+                const { routeSource: _dropped, ...rest } = updated;
                 return {
-                    ...updated,
+                    ...rest,
                     status: 'transporting',
                     routePath: [updated.position, updated.homeBase.position],
                     routeProgress: 0,
@@ -228,17 +251,17 @@ export const useSimStore = create<SimStore>((set, get) => ({
             if (nearest === null) return inc;
 
             // Assign ambulance
-            ambulances = ambulances.map((amb) =>
-                amb.id !== nearest.id
-                    ? amb
-                    : {
-                        ...amb,
-                        status: 'en_route',
-                        assignedIncidentId: inc.id,
-                        routePath: [amb.position, inc.position],
-                        routeProgress: 0,
-                    },
-            );
+            ambulances = ambulances.map((a) => {
+                if (a.id !== nearest.id) return a;
+                const { routeSource: _dropped, ...rest } = a;
+                return {
+                    ...rest,
+                    status: 'en_route',
+                    assignedIncidentId: inc.id,
+                    routePath: [a.position, inc.position],
+                    routeProgress: 0,
+                };
+            });
 
             return {
                 ...inc,
@@ -324,24 +347,48 @@ function handleArrival(amb: Ambulance, position: Ambulance['position']): Ambulan
     }
 
     if (amb.status === 'transporting') {
+        const nearestHospital = findNearestHospital(position);
+        const { routeSource: _dropped, ...rest } = amb;
         return {
-            ...amb,
+            ...rest,
             position,
             status: 'returning',
-            routePath: [position, amb.homeBase.position],
+            routePath: [position, nearestHospital.position],
             routeProgress: 0,
             etaSeconds: null,
         };
     }
 
-    // returning → idle
-    return {
-        ...amb,
-        position: amb.homeBase.position,
-        status: 'idle',
-        routePath: [],
-        routeProgress: 0,
-        etaSeconds: null,
-        assignedIncidentId: null,
-    };
+    if (amb.status === 'returning') {
+        const distToBase = distanceMeters(position, amb.homeBase.position);
+        const arrivedAtBase = distToBase < 500; // metry
+
+        if (!arrivedAtBase) {
+            // Dotarliśmy do szpitala — jedź teraz do bazy
+            const { routeSource: _dropped, ...rest } = amb;
+            return {
+                ...rest,
+                position,
+                status: 'returning',
+                routePath: [position, amb.homeBase.position],
+                routeProgress: 0,
+                etaSeconds: null,
+            };
+        }
+
+        // Dotarliśmy do bazy
+        return {
+            ...amb,
+            position: amb.homeBase.position,
+            status: 'idle',
+            routePath: [],
+            routeProgress: 0,
+            etaSeconds: null,
+            assignedIncidentId: null,
+        };
+    }
+
+    // Fallback (nie powinno się zdarzyć)
+    return amb;
 }
+

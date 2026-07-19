@@ -1,13 +1,9 @@
 import type { LatLng, RouteSource, TrafficModel } from '@sacs/shared-types';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 const CACHE_STORAGE_KEY   = 'sacs_route_cache_v1';
 const QUOTA_STORAGE_KEY   = 'sacs_directions_quota_v1';
-const CACHE_TTL_MS        = 1000 * 60 * 60 * 12; // 12 hours
+const CACHE_TTL_MS        = 1000 * 60 * 60 * 12;
 const DEFAULT_DAILY_LIMIT = 150;
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface CacheEntry {
     path: LatLng[];
@@ -15,7 +11,7 @@ interface CacheEntry {
 }
 
 interface QuotaRecord {
-    date: string; // YYYY-MM-DD
+    date: string;
     count: number;
 }
 
@@ -30,18 +26,13 @@ export interface QuotaStatus {
     remaining: number;
 }
 
-// ─── In-memory mirrors ────────────────────────────────────────────────────────
-
 let memCache: Map<string, CacheEntry> | null = null;
 let memQuota: QuotaRecord | null = null;
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function todayString(): string {
     return new Date().toISOString().slice(0, 10);
 }
 
-/** Round to ~100m precision so nearby requests share cache entries */
 function roundCoord(n: number): number {
     return Math.round(n * 1000) / 1000;
 }
@@ -59,8 +50,6 @@ function buildCacheKey(
         trafficModel,
     ].join(',');
 }
-
-// ─── Cache ────────────────────────────────────────────────────────────────────
 
 function loadCache(): Map<string, CacheEntry> {
     if (memCache) return memCache;
@@ -85,11 +74,9 @@ function persistCache(cache: Map<string, CacheEntry>): void {
         for (const [k, v] of cache.entries()) obj[k] = v;
         localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(obj));
     } catch {
-        // localStorage full — non-fatal, cache just won't persist
+        // non-fatal
     }
 }
-
-// ─── Quota ────────────────────────────────────────────────────────────────────
 
 function loadQuota(): QuotaRecord {
     if (memQuota?.date === todayString()) return memQuota;
@@ -134,8 +121,6 @@ export function getQuotaStatus(): QuotaStatus {
     };
 }
 
-// ─── Google Maps traffic model mapping ───────────────────────────────────────
-
 function toGoogleTrafficModel(
     model: TrafficModel,
 ): google.maps.TrafficModel {
@@ -147,17 +132,6 @@ function toGoogleTrafficModel(
     return map[model];
 }
 
-// ─── Main API ─────────────────────────────────────────────────────────────────
-
-/**
- * Resolves a road-network route between two points.
- *
- * Resolution order:
- * 1. In-memory + localStorage cache (12h TTL) — free
- * 2. Daily quota check — if exhausted, return straight line
- * 3. Google Directions API call — cached + quota incremented
- * 4. Any error → straight-line fallback
- */
 export async function getRoute(
     origin: LatLng,
     destination: LatLng,

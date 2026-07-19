@@ -11,6 +11,7 @@ const en = {
     },
     sim: {
         start: 'Start simulation',
+        continue: 'Continue simulation',
         pause: 'Pause',
         reset: 'Reset',
         speed: 'Speed',

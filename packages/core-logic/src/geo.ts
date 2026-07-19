@@ -51,7 +51,7 @@ export function trafficFactorForTime(
     simMinute: number,
     model: TrafficModel,
 ): number {
-    const hourOfDay = (6 + simMinute / 60) % 24;
+    const hourOfDay = (simMinute / 60) % 24;
 
     const morningRush = gaussian(hourOfDay, 8.3, 1.0);
     const eveningRush = gaussian(hourOfDay, 18.5, 1.3);
@@ -100,8 +100,15 @@ export function etaSeconds(distanceM: number, trafficFactor: number): number {
  * assuming the shift starts at 06:00.
  */
 export function formatSimTime(simMinute: number): string {
-    const totalMinutes = Math.floor(simMinute) + 6 * 60;
-    const hours = Math.floor(totalMinutes / 60) % 24;
+    // No shift offset — treat simMinute as minutes from midnight
+    const totalMinutes = Math.floor(simMinute);
+    const hours   = Math.floor(totalMinutes / 60) % 24;
     const minutes = totalMinutes % 60;
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    const seconds = Math.floor((simMinute - totalMinutes) * 60);
+
+    return (
+        `${String(hours).padStart(2, '0')}:` +
+        `${String(minutes).padStart(2, '0')}:` +
+        `${String(seconds).padStart(2, '0')}`
+    );
 }

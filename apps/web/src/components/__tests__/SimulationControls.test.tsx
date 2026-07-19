@@ -30,6 +30,19 @@ describe('SimulationControls', () => {
             ).toBeInTheDocument();
         });
 
+        it('shows continue button when simulation was paused mid-run', () => {
+            act(() => {
+                useSimStore.getState().toggleRunning();
+                useSimStore.getState().tick(5); // advance time
+                useSimStore.getState().toggleRunning(); // pause
+            });
+
+            render(<SimulationControls />);
+            expect(
+                screen.getByRole('button', { name: /continuar simulación/i }),
+            ).toBeInTheDocument();
+        });
+
         it('toggles simulation running state on click', async () => {
             render(<SimulationControls />);
             expect(useSimStore.getState().running).toBe(false);

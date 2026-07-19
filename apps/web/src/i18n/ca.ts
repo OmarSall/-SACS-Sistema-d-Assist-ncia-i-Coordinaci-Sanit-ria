@@ -11,6 +11,7 @@ const ca = {
     },
     sim: {
         start: 'Iniciar simulació',
+        continue: 'Continuar simulació',
         pause: 'Pausar',
         reset: 'Reiniciar',
         speed: 'Velocitat',
